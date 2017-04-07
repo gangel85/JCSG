@@ -269,10 +269,10 @@ public abstract class Geant4Basic {
     }
 
     public List<Geant4Basic> getAllVolumes() {
-        List<Geant4Basic> volList = Arrays.asList(this);
+        List<Geant4Basic> volList = new ArrayList<>(Arrays.asList(this));
 
         volList.addAll(children.stream()
-                .flatMap(child -> child.getComponents().stream())
+                .flatMap(child -> child.getAllVolumes().stream())
                 .collect(Collectors.toList()));
 
         return volList;
