@@ -5,7 +5,13 @@
  */
 package org.jlab.detector.geant4.v2;
 
+import eu.mihosoft.vrl.v3d.CSG;
+import eu.mihosoft.vrl.v3d.Transform;
 import eu.mihosoft.vrl.v3d.Vector3d;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import org.jlab.detector.units.SystemOfUnits.Length;
 import org.jlab.detector.volume.G4Stl;
 import org.jlab.detector.volume.G4World;
@@ -45,12 +51,16 @@ public final class RICHGeant4Factory extends Geant4Factory {
         //import the 5 mesh files
 
         ClassLoader cloader = getClass().getClassLoader();
+        G4Stl gasVolume = new G4Stl("OpticalGasVolume", cloader.getResourceAsStream("rich/cad/OpticalGasVolume.stl"));
+        //gasVolume.scale(Length.mm / Length.cm);
+        gasVolume.setMother(motherVolume);
+        
         for (String name : new String[]{"AerogelTiles", "Aluminum", "CFRP", "Glass", "TedlarWrapping"}) {
             G4Stl component = new G4Stl(String.format("%s", name),
                     cloader.getResourceAsStream(String.format("rich/cad/%s.stl", name)));
 
             component.scale(Length.mm / Length.cm);
-            component.setMother(motherVolume);
+            component.setMother(gasVolume);
         }
 
         //place the PMTs in the trapezoidal box
@@ -67,18 +77,17 @@ public final class RICHGeant4Factory extends Geant4Factory {
 
                 //build the PMT
                 G4Box PMT = buildMAPMT(String.format("MAPMT_%d_%d", irow, ipmt));
-                PMT.setMother(motherVolume);
+                PMT.setMother(gasVolume);
 
                 PMT.translate(MAPMT_xlocal, MAPMT_ylocal, MAPMTFirstRow_z);
 
                 PMT.rotate("xzy", Math.toRadians(RICH_thtilt), Math.toRadians(90.0 - (sector - 1) * 60.0), 0);
                 Vector3d position = new Vector3d(0, RICHpanel_y + RICHpanel_y_offset, RICHpanel_z);
-                PMT.translate(position.rotateZ(-Math.toRadians(90.0 - (sector-1)*60.0)));
+                PMT.translate(position.rotateZ(-Math.toRadians(90.0 - (sector - 1) * 60.0)));
             }
         }
 
     }
-
 
     //function that generates the PMT with all the volumes in it 
     private G4Box buildMAPMT(String mapmtName) {
