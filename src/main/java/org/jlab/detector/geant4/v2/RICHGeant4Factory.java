@@ -5,13 +5,7 @@
  */
 package org.jlab.detector.geant4.v2;
 
-import eu.mihosoft.vrl.v3d.CSG;
-import eu.mihosoft.vrl.v3d.Transform;
 import eu.mihosoft.vrl.v3d.Vector3d;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import org.jlab.detector.units.SystemOfUnits.Length;
 import org.jlab.detector.volume.G4Stl;
 import org.jlab.detector.volume.G4World;
@@ -51,15 +45,14 @@ public final class RICHGeant4Factory extends Geant4Factory {
         //import the 5 mesh files
 
         ClassLoader cloader = getClass().getClassLoader();
-        G4Stl gasVolume = new G4Stl("OpticalGasVolume", cloader.getResourceAsStream("rich/cad/OpticalGasVolume.stl"));
-        //gasVolume.scale(Length.mm / Length.cm);
+        G4Stl gasVolume = new G4Stl("OpticalGasVolume", cloader.getResourceAsStream("rich/cad/OpticalGasVolume.stl"), Length.mm / Length.cm);
         gasVolume.setMother(motherVolume);
-        
+
         for (String name : new String[]{"AerogelTiles", "Aluminum", "CFRP", "Glass", "TedlarWrapping"}) {
             G4Stl component = new G4Stl(String.format("%s", name),
-                    cloader.getResourceAsStream(String.format("rich/cad/%s.stl", name)));
+                    cloader.getResourceAsStream(String.format("rich/cad/%s.stl", name)),
+                    Length.mm / Length.cm);
 
-            component.scale(Length.mm / Length.cm);
             component.setMother(gasVolume);
         }
 

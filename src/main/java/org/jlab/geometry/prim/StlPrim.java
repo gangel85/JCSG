@@ -4,10 +4,12 @@
  */
 package org.jlab.geometry.prim;
 
+import eu.mihosoft.vrl.v3d.CSG;
 import eu.mihosoft.vrl.v3d.Polygon;
 import eu.mihosoft.vrl.v3d.Primitive;
 import eu.mihosoft.vrl.v3d.PropertyStorage;
 import eu.mihosoft.vrl.v3d.STL;
+import eu.mihosoft.vrl.v3d.Transform;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
@@ -19,7 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * An axis-aligned solid trapezoid defined by dimensions, inspired by G4Trap
+ * primitive volume loaded from STL file
  *
  * @author Andrey Kim;
  */
@@ -30,7 +32,7 @@ public class StlPrim implements Primitive {
     private List<Polygon> polygons;
     ByteArrayOutputStream stlBuffer;
 
-    public StlPrim(InputStream stlstream) {
+    public StlPrim(InputStream stlstream, double scaleFactor) {
         polygons = new ArrayList<>();
 
         stlBuffer = new ByteArrayOutputStream();
@@ -45,7 +47,9 @@ public class StlPrim implements Primitive {
 
             stlBuffer.flush();
 
-            polygons.addAll(STL.file(new ByteArrayInputStream(stlBuffer.toByteArray())).getPolygons());
+            CSG stlCSG = STL.file(new ByteArrayInputStream(stlBuffer.toByteArray()));
+            stlCSG.transform(Transform.unity().scale(scaleFactor));
+            polygons.addAll(stlCSG.getPolygons());
         } catch (IOException ex) {
             System.err.println("STL file is invalid");
         }
