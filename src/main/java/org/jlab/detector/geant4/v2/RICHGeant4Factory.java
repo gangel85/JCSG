@@ -6,13 +6,20 @@
 package org.jlab.detector.geant4.v2;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jlab.detector.units.SystemOfUnits.Length;
 import org.jlab.detector.volume.G4Stl;
 import org.jlab.detector.volume.G4World;
+import org.jlab.geom.prim.Point3D;
+
+
 import org.jlab.detector.volume.G4Box;
 
 /**
- *
+ * Building the RICH PMTs
  * @author Goodwill, kenjo
  */
 public final class RICHGeant4Factory extends Geant4Factory {
@@ -37,10 +44,18 @@ public final class RICHGeant4Factory extends Geant4Factory {
     private final double MAPMTWall_thickness = 1.0 * Length.mm;
     private final double MAPMTWindow_thickness = 1.5 * Length.mm;
     private final double MAPMTPhotocathode_side = 49 * Length.mm,
-            MAPMTPhotocathode_thickness = 1 * Length.mm;
+            MAPMTPhotocathode_thickness = 0.1 * Length.mm;
     private final double MAPMTSocket_thickness = 2.7 * Length.mm;
+    
+    private final double offset = 0.5 * Length.mm;
+    
+    // list containing the pmts
+    private List<G4Box> pmts = new ArrayList<G4Box>();
+    private List<G4Box> photocatodes = new ArrayList<G4Box>();
+    
 
     public RICHGeant4Factory() {
+    	
         motherVolume = new G4World("fc");
         //import the 5 mesh files
 
@@ -56,6 +71,10 @@ public final class RICHGeant4Factory extends Geant4Factory {
             component.setMother(gasVolume);
         }
 
+     
+        
+   
+        
         //place the PMTs in the trapezoidal box
         for (int irow = 0; irow < PMT_rows; irow++) {
             //define number of PMTs in this row
@@ -77,14 +96,20 @@ public final class RICHGeant4Factory extends Geant4Factory {
                 PMT.rotate("xzy", Math.toRadians(RICH_thtilt), Math.toRadians(90.0 - (sector - 1) * 60.0), 0);
                 Vector3d position = new Vector3d(0, RICHpanel_y + RICHpanel_y_offset, RICHpanel_z);
                 PMT.translate(position.rotateZ(-Math.toRadians(90.0 - (sector - 1) * 60.0)));
+                pmts.add(PMT);
+                
+               
+                
             }
         }
 
     }
 
     //function that generates the PMT with all the volumes in it 
+    
     private G4Box buildMAPMT(String mapmtName) {
 
+    	
         G4Box MAPMTVolume = new G4Box(mapmtName, MAPMT_dx, MAPMT_dy, MAPMT_dz);
 
         //Aluminum walls of MAPMT
@@ -110,11 +135,13 @@ public final class RICHGeant4Factory extends Geant4Factory {
         Window.setMother(MAPMTVolume);
 
         //photocathode
-        double PMTPhotocathode_z = -MAPMT_dz + 2 * MAPMTWindow_thickness / 2 + MAPMTPhotocathode_thickness / 2;
+        double PMTPhotocathode_z = -MAPMT_dz + 2 * MAPMTWindow_thickness / 2 + MAPMTPhotocathode_thickness / 2 + offset;
         G4Box Photocathode = new G4Box("Photocathode_" + mapmtName, MAPMTPhotocathode_side / 2, MAPMTPhotocathode_side / 2, MAPMTPhotocathode_thickness / 2);
         Photocathode.translate(0, 0, -MAPMT_dz + MAPMTWindow_thickness + MAPMTPhotocathode_thickness / 2);
         Photocathode.setMother(MAPMTVolume);
-
+      // add the photocatodes to the list
+        photocatodes.add(Photocathode);
+       
         //socket
         G4Box Socket = new G4Box("Socket_" + mapmtName, MAPMT_dx - MAPMTWall_thickness, MAPMT_dy - MAPMTWall_thickness, MAPMTSocket_thickness / 2);
         Socket.translate(0, 0, MAPMT_dz - MAPMTSocket_thickness / 2);
@@ -123,4 +150,30 @@ public final class RICHGeant4Factory extends Geant4Factory {
         return MAPMTVolume;
     }
 
+    /**
+     * @author: gangel
+     * @param i the nr of the PMT
+     * @return: PMT volume as a G4Box
+     */
+    public G4Box GetPMT(int i)
+    {
+    	
+    return	pmts.get(i-1);
+    
+    	// Object[] pmtArray = pmts.toArray();
+		//return (G4Box) pmtArray[i];
+    }
+    
+    /**
+     * @author: gangel
+     * @param i the nr of the PMT
+     * @return: the Photocatodes volumes inside the PMT
+     */
+    public G4Box GetPhotocatode(int i)
+    {
+    	
+    return	photocatodes.get(i-1);
+    
+   
+    }
 }

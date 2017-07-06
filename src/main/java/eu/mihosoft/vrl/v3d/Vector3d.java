@@ -116,6 +116,7 @@ public class Vector3d {
         this.z = vec.z;
     }
 
+
     /**
      * Subtracts the given vector from this vector
      *
@@ -716,4 +717,6 @@ public class Vector3d {
     public double phi() {
         return Math.atan2(this.y, this.x);
     }
+    
+    
 }
